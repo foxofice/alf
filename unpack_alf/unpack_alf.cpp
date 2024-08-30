@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
 	{
 		_read(fd, &hdr_w, sizeof(hdr_w));
 
-		// Hack for addon archives（TODO: 目前百千还没有出新AP，数据位置存疑）
+		// Hack for addon archives
 		if (!memcmp(hdr_w.signature_title, L"S5AC", 8)) {
 			_lseek(fd, 532, SEEK_SET);
 		}
