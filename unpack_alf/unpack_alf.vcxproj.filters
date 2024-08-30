@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="unpack_alf.cpp" />
+    <ClCompile Include="..\lzss\lzss.cpp">
+      <Filter>lzss</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="lzss">
+      <UniqueIdentifier>{094979b5-74e5-421c-94a5-4c22f172b9f3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\lzss\lzss.h">
+      <Filter>lzss</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
