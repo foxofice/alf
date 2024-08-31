@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
 	{
 		_read(fd, &hdr_w, sizeof(hdr_w));
 
-		// Hack for addon archives（TODO: 目前百千还没有出新AP，数据位置存疑）
+		// Hack for addon archives
 		if (!memcmp(hdr_w.signature_title, L"S5AC", 8)) {
 			_lseek(fd, 532, SEEK_SET);
 		}
@@ -273,6 +273,8 @@ int main(int argc, char** argv) {
 														  *       why? I don't know
 														  */
 
+	size_t max_line_len = 0;
+
 	if(unicode_alf)
 	{
 		S4TOCARCENTRY_W* arcentries = (S4TOCARCENTRY_W*) (archdr + 1); /* Note: Pointer addition is not numeric addition
@@ -298,8 +300,24 @@ int main(int argc, char** argv) {
 		}
 
 		for (unsigned long i = 0; i < filhdr->entry_count; i++) {
-			if(i > 0 && (i % 1000) == 0)
-				printf("Unpacking: %u/%u\n", i, filhdr->entry_count);
+			if(i > 0)
+				printf("\r");
+
+			WCHAR txt[1024] = {};
+			swprintf_s(txt, L"Unpacking: [%u/%u] %s", i + 1, filhdr->entry_count, filentries[i].filename);
+			wprintf(L"%s", txt);
+
+			size_t line_len = wcslen(txt);
+
+			if(line_len < max_line_len)
+			{
+				char space[1024];
+				memset(space, ' ', max_line_len - line_len);
+				space[max_line_len - line_len] = '\0';
+				printf("%s", space);
+			}
+
+			max_line_len = __max(max_line_len, line_len);
 
 			arc_info_t_W& arc = arc_info[filentries[i].archive_index];
 
@@ -353,8 +371,24 @@ int main(int argc, char** argv) {
 		}
 
 		for (unsigned long i = 0; i < filhdr->entry_count; i++) {
-			if(i > 0 && (i % 1000) == 0)
-				printf("Unpacking: %u/%u\n", i, filhdr->entry_count);
+			if(i > 0)
+				printf("\r");
+
+			char txt[1024] = {};
+			sprintf_s(txt, "Unpacking: [%u/%u] %s", i + 1, filhdr->entry_count, filentries[i].filename);
+			printf("%s", txt);
+
+			size_t line_len = strlen(txt);
+
+			if(line_len < max_line_len)
+			{
+				char space[1024];
+				memset(space, ' ', max_line_len - line_len);
+				space[max_line_len - line_len] = '\0';
+				printf("%s", space);
+			}
+
+			max_line_len = __max(max_line_len, line_len);
 
 			arc_info_t& arc = arc_info[filentries[i].archive_index];
 
@@ -386,7 +420,7 @@ int main(int argc, char** argv) {
 
 	delete [] toc_buff;
 
-	printf("Unpacking done!\n");
+	printf("\nUnpacking done!\n");
 
 	getchar();
 	return 0;
