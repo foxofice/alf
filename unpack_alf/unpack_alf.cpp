@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <string>
+#include <vector>
 #include <Shlwapi.h>
 
 #include "../lzss/lzss.h"
@@ -273,7 +274,13 @@ int main(int argc, char** argv) {
 														  *       why? I don't know
 														  */
 
-	size_t max_line_len = 0;
+	size_t last_line_len = 0;
+
+	char space[1024];
+	memset(space, ' ', sizeof(space) - 1);
+	space[sizeof(space) - 1] = '\0';
+
+	vector<BYTE> buffer;
 
 	if(unicode_alf)
 	{
@@ -309,15 +316,10 @@ int main(int argc, char** argv) {
 
 			size_t line_len = wcslen(txt);
 
-			if(line_len < max_line_len)
-			{
-				char space[1024];
-				memset(space, ' ', max_line_len - line_len);
-				space[max_line_len - line_len] = '\0';
-				printf("%s", space);
-			}
+			if(line_len < last_line_len)
+				printf("%s", space + (sizeof(space) - 1 - (last_line_len - line_len)));
 
-			max_line_len = __max(max_line_len, line_len);
+			last_line_len = line_len;
 
 			arc_info_t_W& arc = arc_info[filentries[i].archive_index];
 
@@ -326,9 +328,13 @@ int main(int argc, char** argv) {
 			}
 
 			unsigned long  len  = filentries[i].length;
-			unsigned char* buff = new unsigned char[len];
-			_lseek(arc.fd, filentries[i].offset, SEEK_SET);
-			_read(arc.fd, buff, len);
+			buffer.resize(len);
+
+			if(len > 0)
+			{
+				_lseek(arc.fd, filentries[i].offset, SEEK_SET);
+				_read(arc.fd, &buffer[0], len);
+			}
 
 			//int out_fd = as::open_or_die(arc.dir + filentries[i].filename,
 			//	O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
@@ -338,10 +344,8 @@ int main(int argc, char** argv) {
 				printf("Died!\n");
 				return 1;
 			}
-			_write(out_fd, buff, len);
+			_write(out_fd, buffer.data(), len);
 			_close(out_fd);
-
-			delete [] buff;
 		}
 
 		delete [] arc_info;
@@ -380,15 +384,10 @@ int main(int argc, char** argv) {
 
 			size_t line_len = strlen(txt);
 
-			if(line_len < max_line_len)
-			{
-				char space[1024];
-				memset(space, ' ', max_line_len - line_len);
-				space[max_line_len - line_len] = '\0';
-				printf("%s", space);
-			}
+			if(line_len < last_line_len)
+				printf("%s", space + (sizeof(space) - 1 - (last_line_len - line_len)));
 
-			max_line_len = __max(max_line_len, line_len);
+			last_line_len = line_len;
 
 			arc_info_t& arc = arc_info[filentries[i].archive_index];
 
@@ -397,9 +396,13 @@ int main(int argc, char** argv) {
 			}
 
 			unsigned long  len  = filentries[i].length;
-			unsigned char* buff = new unsigned char[len];
-			_lseek(arc.fd, filentries[i].offset, SEEK_SET);
-			_read(arc.fd, buff, len);
+			buffer.resize(len);
+
+			if(len > 0)
+			{
+				_lseek(arc.fd, filentries[i].offset, SEEK_SET);
+				_read(arc.fd, &buffer[0], len);
+			}
 
 			//int out_fd = as::open_or_die(arc.dir + filentries[i].filename,
 			//	O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
@@ -409,10 +412,8 @@ int main(int argc, char** argv) {
 				printf("Died!\n");
 				return 1;
 			}
-			_write(out_fd, buff, len);
+			_write(out_fd, buffer.data(), len);
 			_close(out_fd);
-
-			delete [] buff;
 		}
 
 		delete [] arc_info;
