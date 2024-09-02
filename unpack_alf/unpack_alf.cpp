@@ -62,8 +62,8 @@ struct S4HDR {
 	unsigned char unknown[60];
 };
 
-struct S4HDR_W {
-	WCHAR         signature_title[240]; // "S4IC413 <title>", "S4AC422 <title>", L"S5IC502 <title>", L"S5AC502 <title>"
+struct S5HDR {
+	WCHAR         signature_title[240]; // L"S5IC502 <title>", L"S5AC502 <title>"
 	unsigned char unknown[60];
 };
 
@@ -83,7 +83,7 @@ struct S4TOCARCENTRY {
 	char filename[256];
 };
 
-struct S4TOCARCENTRY_W {
+struct S5TOCARCENTRY {
 	// There's a bunch of junk following the name which I assume is
 	// uninitialized memory...
 	WCHAR filename[256];
@@ -99,7 +99,7 @@ struct S4TOCFILENTRY {
 	unsigned long length;
 };
 
-struct S4TOCFILENTRY_W {
+struct S5TOCFILENTRY {
 	WCHAR         filename[64];
 	unsigned long archive_index;
 	unsigned long file_index; // within archive?
@@ -239,24 +239,24 @@ int main(int argc, char** argv) {
 
 	bool unicode_alf = !memcmp(g_header, L"S5IC", 8) || !memcmp(g_header, L"S5AC", 8);
 
-	S4HDR hdr;
-	S4HDR_W hdr_w;
+	S4HDR hdr4;
+	S5HDR hdr5;
 
 	if(unicode_alf)
 	{
-		_read(fd, &hdr_w, sizeof(hdr_w));
+		_read(fd, &hdr5, sizeof(hdr5));
 
 		// Hack for addon archives
-		if (!memcmp(hdr_w.signature_title, L"S5AC", 8)) {
+		if (!memcmp(hdr5.signature_title, L"S5AC", 8)) {
 			_lseek(fd, 532, SEEK_SET);
 		}
 	}
 	else
 	{
-		_read(fd, &hdr, sizeof(hdr));
+		_read(fd, &hdr4, sizeof(hdr4));
 
 		// Hack for addon archives
-		if (!memcmp(hdr.signature_title, "S4AC", 4)) {
+		if (!memcmp(hdr4.signature_title, "S4AC", 4)) {
 			_lseek(fd, 268, SEEK_SET);
 		}
 	}
@@ -281,18 +281,19 @@ int main(int argc, char** argv) {
 	space[sizeof(space) - 1] = '\0';
 
 	vector<BYTE> buffer;
+	buffer.reserve(1048576 * 20);
 
 	if(unicode_alf)
 	{
-		S4TOCARCENTRY_W* arcentries = (S4TOCARCENTRY_W*) (archdr + 1); /* Note: Pointer addition is not numeric addition
-																		*       archdr + 1 means archdr + sizeof(archdr) * 1
-																		*       the same applies below
-																		* Reference: Pointer arithmetics
-																		*            http://www.cplusplus.com/doc/tutorial/pointers/
-																		*/
+		S5TOCARCENTRY* arcentries = (S5TOCARCENTRY*) (archdr + 1); /* Note: Pointer addition is not numeric addition
+																	*       archdr + 1 means archdr + sizeof(archdr) * 1
+																	*       the same applies below
+																	* Reference: Pointer arithmetics
+																	*            http://www.cplusplus.com/doc/tutorial/pointers/
+																	*/
 
-		S4TOCFILHDR*     filhdr     = (S4TOCFILHDR*) (arcentries + archdr->entry_count);
-		S4TOCFILENTRY_W* filentries = (S4TOCFILENTRY_W*) (filhdr + 1);
+		S4TOCFILHDR*   filhdr     = (S4TOCFILHDR*) (arcentries + archdr->entry_count);
+		S5TOCFILENTRY* filentries = (S5TOCFILENTRY*) (filhdr + 1);
 
 		arc_info_t_W* arc_info = new arc_info_t_W[archdr->entry_count];
 
