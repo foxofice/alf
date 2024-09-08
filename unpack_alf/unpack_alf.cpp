@@ -213,6 +213,7 @@ int main(int argc, char** argv) {
 		{
 			print_usage();
 			fprintf(stderr, "<%s> or <%s> or <APPEND??.AAI> not found\n", FILE1, FILE2);
+			getchar();
 			return -1;
 		}
 	}
@@ -221,6 +222,7 @@ int main(int argc, char** argv) {
 	else
 	{
 		print_usage();
+		getchar();
 		return -1;
 	}
 
@@ -228,12 +230,14 @@ int main(int argc, char** argv) {
 	int fd = _open(in_filename.c_str(), _O_RDONLY | _O_BINARY);
 	if (fd == -1) {
 		printf("Died!\n");
+		getchar();
 		return 1;
 	}
 
 	if(!read_header(in_filename.c_str()))
 	{
 		fprintf(stderr, "read %s failed!\n", in_filename.c_str());
+		getchar();
 		return -1;
 	}
 
@@ -343,6 +347,7 @@ int main(int argc, char** argv) {
 			int out_fd = _wopen(((wstring)(arc.dir + filentries[i].filename)).c_str(), _O_CREAT | _O_TRUNC | _O_WRONLY | _O_BINARY, _S_IREAD | _S_IWRITE);
 			if (fd == -1) {
 				printf("Died!\n");
+				getchar();
 				return 1;
 			}
 			_write(out_fd, buffer.data(), len);
@@ -411,6 +416,7 @@ int main(int argc, char** argv) {
 			int out_fd = _open(((string)(arc.dir + filentries[i].filename)).c_str(), _O_CREAT | _O_TRUNC | _O_WRONLY | _O_BINARY, _S_IREAD | _S_IWRITE);
 			if (fd == -1) {
 				printf("Died!\n");
+				getchar();
 				return 1;
 			}
 			_write(out_fd, buffer.data(), len);
