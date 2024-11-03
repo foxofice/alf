@@ -58,7 +58,7 @@ WCHAR * get_file_prefix(WCHAR * filename) {
 }
 
 struct S4HDR {
-	char          signature_title[240]; // "S4IC413 <title>", "S4AC422 <title>"
+	char          signature_title[240]; // "S3AC309 <title>", "S4IC413 <title>", "S4AC422 <title>"
 	unsigned char unknown[60];
 };
 
@@ -149,8 +149,7 @@ struct arc_info_t_W {
 	wstring dir;
 };
 
-#define	FILE1	"sys4ini.bin"
-#define FILE2	"SYS5INI.bin"
+const char *g_bin_files[]	= { "SYS3INI.BIN", "sys4ini.bin", "SYS5INI.bin" };
 
 BYTE g_header[16]	= {};
 
@@ -176,25 +175,31 @@ int main(int argc, char** argv) {
 
 	auto print_usage = [&]()
 	{
-		fprintf(stderr, "exs4alf v1.01 by asmodean (FPE added support for the SYS5INI.bin)\n\n");
-		fprintf(stderr, "usage: %s [<%s>/<%s>/<APPEND??.AAI>]\n", argv[0], FILE1, FILE2);
+		fprintf(stderr, "exs4alf v1.01 by asmodean (FPE added support for the SYS3INI.bin/SYS5INI.bin)\n\n");
+
+		fprintf(stderr, "usage: %s [", argv[0]);
+		for(int i=0; i<_countof(g_bin_files); ++i)
+			fprintf(stderr, "<%s>/", g_bin_files[i]);
+		fprintf(stderr, "<APPEND??.AAI>]\n");
 	};
 
 	string in_filename;
 
 	if(argc == 1)
 	{
-		if(PathFileExistsA(FILE1))
+		// SYS?INI.bin
+		for(int i=0; i<_countof(g_bin_files); ++i)
 		{
-			in_filename = FILE1;
-			printf("%s found.\n", FILE1);
-		}
-		else if(PathFileExistsA(FILE2))
-		{
-			in_filename = FILE2;
-			printf("%s found.\n", FILE2);
-		}
-		else
+			if(PathFileExistsA(g_bin_files[i]))
+			{
+				in_filename = g_bin_files[i];
+				printf("%s found.\n", g_bin_files[i]);
+				break;
+			}
+		}	// for
+
+		// APPEND??.AAI
+		if(in_filename.empty())
 		{
 			for(int i=1; i<=20; ++i)
 			{
@@ -206,13 +211,13 @@ int main(int argc, char** argv) {
 					in_filename = aai_file;
 					break;
 				}
-			}
+			}	// for
 		}
 
 		if(in_filename.empty())
 		{
 			print_usage();
-			fprintf(stderr, "<%s> or <%s> or <APPEND??.AAI> not found\n", FILE1, FILE2);
+			fprintf(stderr, "<SYS?INI.bin> or <APPEND??.AAI> not found\n");
 			getchar();
 			return -1;
 		}
@@ -260,7 +265,9 @@ int main(int argc, char** argv) {
 		_read(fd, &hdr4, sizeof(hdr4));
 
 		// Hack for addon archives
-		if (!memcmp(hdr4.signature_title, "S4AC", 4)) {
+		if(	!memcmp(hdr4.signature_title, "S3AC", 4) ||
+			!memcmp(hdr4.signature_title, "S4AC", 4) )
+		{
 			_lseek(fd, 268, SEEK_SET);
 		}
 	}
